@@ -1,9 +1,9 @@
 /*! MIT © Luke Edwards https://github.com/lukeed/sirv/blob/master/packages/sirv/index.js */
 import { existsSync, statSync, Stats } from "fs";
 import { join, normalize, resolve } from "path";
-import { mimes, lookup as getExt } from "mrmime";
+//import { mimes, lookup as getExt } from "mrmime";
 import { totalist } from "totalist/sync";
-import exmimes from "./mime.conf.js";
+//import exmimes from "./mime.conf.js";
 
 // function isMatch(uri, arr) {
 //     for (let i = 0; i < arr.length; i++) {
@@ -116,7 +116,7 @@ const ENCODING = {
 function toHeaders(name, stats, isEtag) {
   let enc = ENCODING[name.slice(-3)];
 
-  let ctype = getExt(name.slice(0, enc && -3)) || "";
+  let ctype = Bun.file(name).type; //getExt(name.slice(0, enc && -3)) || "";
   if (ctype === "text/html") ctype += ";charset=utf-8";
 
   let headers = new Headers({
@@ -132,9 +132,9 @@ function toHeaders(name, stats, isEtag) {
   return headers;
 }
 
-for (const mime in exmimes) {
-  mimes[mime] = exmimes[mime];
-}
+// for (const mime in exmimes) {
+//   mimes[mime] = exmimes[mime];
+// }
 
 /**
  * @param {import("../sirv").Options} opts

@@ -1,4 +1,6 @@
-# svelte-adapter-bun
+# @eslym/svelte-adapter-bun
+
+A fork from [svelte-adapter-bun](https://github.com/gornostay25/svelte-adapter-bun)
 
 [Adapter](https://kit.svelte.dev/docs/adapters) for SvelteKit apps that generates a standalone [Bun](https://github.com/oven-sh/bun) server.
 

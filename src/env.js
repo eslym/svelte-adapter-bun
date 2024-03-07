@@ -7,6 +7,7 @@ const expected = new Set([
   "PROTOCOL_HEADER",
   "HOST_HEADER",
   "SERVERDEV",
+  "LOGREQ",
 ]);
 export const build_options = BUILD_OPTIONS;
 

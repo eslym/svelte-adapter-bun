@@ -20,7 +20,8 @@ const origin = env("ORIGIN", undefined);
 
 const address_header = env("ADDRESS_HEADER", "").toLowerCase();
 const protocol_header = env("PROTOCOL_HEADER", "").toLowerCase();
-const host_header = env("HOST_HEADER", "host").toLowerCase();
+const host_header = env("HOST_HEADER", "").toLowerCase();
+const log_req = env("LOGREQ", "").toLowerCase() === 'true';
 
 /** @param {boolean} assets */
 export default function (assets) {
@@ -30,16 +31,23 @@ export default function (assets) {
     ssr,
   ].filter(Boolean);
 
-  /**@param {Request} req */
-  function handler(req) {
+  /**
+   * @param {Request} req
+   * @param {import('bun').Server} srv
+   */
+  function handler(req, srv) {
     function handle(i) {
-      return handlers[i](req, () => {
-        if (i < handlers.length) {
-          return handle(i + 1);
-        } else {
-          return new Response(404, { status: 404 });
-        }
-      });
+      return handlers[i](
+        req,
+        () => {
+          if (i < handlers.length) {
+            return handle(i + 1);
+          } else {
+            return new Response(404, { status: 404 });
+          }
+        },
+        srv,
+      );
     }
     return handle(0);
   }
@@ -92,25 +100,41 @@ function serve(path, client = false) {
   );
 }
 
-/**@param {Request} request */
-function ssr(request) {
-  if (origin) {
-    const requestOrigin = get_origin(request.headers);
-    if (origin !== requestOrigin) {
-      const url = request.url.slice(request.url.split("/", 3).join("/").length);
-      request = new Request(origin + url, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-        referrer: request.referrer,
-        referrerPolicy: request.referrerPolicy,
-        mode: request.mode,
-        credentials: request.credentials,
-        cache: request.cache,
-        redirect: request.redirect,
-        integrity: request.integrity,
-      });
+/**
+ * @param {Request} request
+ * @param {import('bun').Server} bunServer
+ */
+function ssr(request, _, bunServer) {
+  const clientIp = bunServer.requestIP(request)?.address;
+  // For debugging
+  if (log_req) {
+    console.log('request', {
+      clientIp,
+      method: request.method,
+      url: request.url,
+      headers: Object.fromEntries(request.headers.entries()),
+    })
+  }
+
+  const url = new URL(request.url);
+
+  if(origin) {
+    const new_url = new URL(origin);
+    new_url.pathname = url.pathname;
+    new_url.search = url.search;
+    new_url.hash = url.hash;
+    request = new Request(new_url, request);
+  } else if (
+    (host_header && url.host !== request.headers.get(host_header)) ||
+    (protocol_header && url.protocol !== request.headers.get(protocol_header) + ':')
+  ){
+    if(host_header) {
+      url.host = request.headers.get(host_header);
     }
+    if(protocol_header) {
+      url.protocol = request.headers.get(protocol_header) + ':';
+    }
+    request = new Request(url, request);
   }
 
   if (address_header && !request.headers.has(address_header)) {
@@ -145,7 +169,7 @@ function ssr(request) {
 
         return value;
       }
-      return "127.0.0.1";
+      return clientIp ?? "127.0.0.1";
     },
     platform: {
       isBun() {
@@ -153,14 +177,4 @@ function ssr(request) {
       },
     },
   });
-}
-
-/**
- * @param {Headers} headers
- * @returns {string}
- */
-function get_origin(headers) {
-  const protocol = (protocol_header && headers.get(protocol_header)) || "https";
-  const host = headers.get(host_header);
-  return `${protocol}://${host}`;
 }
