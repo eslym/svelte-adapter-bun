@@ -21,7 +21,7 @@ const origin = env("ORIGIN", undefined);
 const address_header = env("ADDRESS_HEADER", "").toLowerCase();
 const protocol_header = env("PROTOCOL_HEADER", "").toLowerCase();
 const host_header = env("HOST_HEADER", "").toLowerCase();
-const log_req = env("LOGREQ", "").toLowerCase() === 'true';
+const log_req = env("LOGREQ", "").toLowerCase() === "true";
 
 /** @param {boolean} assets */
 export default function (assets) {
@@ -108,33 +108,33 @@ function ssr(request, _, bunServer) {
   const clientIp = bunServer.requestIP(request)?.address;
   // For debugging
   if (log_req) {
-    console.log('request', {
+    console.log("request", {
       clientIp,
       method: request.method,
       url: request.url,
       headers: Object.fromEntries(request.headers.entries()),
-    })
+    });
   }
 
   const url = new URL(request.url);
 
-  if(origin) {
+  if (origin) {
     const new_url = new URL(origin);
     new_url.pathname = url.pathname;
     new_url.search = url.search;
     new_url.hash = url.hash;
-    request = new Request(new_url, request);
+    request = clone_req(new_url, request);
   } else if (
     (host_header && url.host !== request.headers.get(host_header)) ||
-    (protocol_header && url.protocol !== request.headers.get(protocol_header) + ':')
-  ){
-    if(host_header) {
+    (protocol_header && url.protocol !== request.headers.get(protocol_header) + ":")
+  ) {
+    if (host_header) {
       url.host = request.headers.get(host_header);
     }
-    if(protocol_header) {
-      url.protocol = request.headers.get(protocol_header) + ':';
+    if (protocol_header) {
+      url.protocol = request.headers.get(protocol_header) + ":";
     }
-    request = new Request(url, request);
+    request = clone_req(url, request);
   }
 
   if (address_header && !request.headers.has(address_header)) {
@@ -176,5 +176,25 @@ function ssr(request, _, bunServer) {
         return true;
       },
     },
+  });
+}
+
+/**
+ * @param {string|URL} url
+ * @param {Request} request
+ * @returns {Request}
+ */
+function clone_req(url, request) {
+  return new Request(url, {
+    method: request.method,
+    headers: request.headers,
+    body: request.body,
+    referrer: request.referrer,
+    referrerPolicy: request.referrerPolicy,
+    mode: request.mode,
+    credentials: request.credentials,
+    cache: request.cache,
+    redirect: request.redirect,
+    integrity: request.integrity,
   });
 }
