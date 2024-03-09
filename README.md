@@ -6,11 +6,11 @@ A fork from [svelte-adapter-bun](https://github.com/gornostay25/svelte-adapter-b
 
 ## :zap: Usage
 
-Install with `bun add -d svelte-adapter-bun`, then add the adapter to your `svelte.config.js`:
+Install with `bun add -d @eslym/svelte-adapter-bun`, then add the adapter to your `svelte.config.js`:
 
 ```js
 // svelte.config.js
-import adapter from "svelte-adapter-bun";
+import adapter from "@eslym/svelte-adapter-bun";
 
 export default {
   kit: {
@@ -35,7 +35,7 @@ The adapter can be configured with various options:
 
 ```js
 // svelte.config.js
-import adapter from "svelte-adapter-bun";
+import adapter from "@eslym/svelte-adapter-bun";
 export default {
   kit: {
     adapter: adapter({
@@ -181,7 +181,7 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host bun build/index.j
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
-The [RequestEvent](https://kit.svelte.dev/docs/types#additional-types-requestevent) object passed to hooks and endpoints includes an `event.clientAddress` property representing the client's IP address. [Bun.js haven't got functionality](https://github.com/Jarred-Sumner/bun/issues/518) to get client's IP address, so SvelteKit will receive `127.0.0.1` or if your server is behind one or more proxies (such as a load balancer), you can get an IP address from headers, so we need to specify an `ADDRESS_HEADER` to read the address from:
+The [RequestEvent](https://kit.svelte.dev/docs/types#additional-types-requestevent) object passed to hooks and endpoints includes an `event.clientAddress` property representing the client's IP address. If your server is behind one or more proxies (such as a load balancer), you can get an IP address from headers, so we need to specify an `ADDRESS_HEADER` to read the address from:
 
 ```
 ADDRESS_HEADER=True-Client-IP bun build/index.js
@@ -206,4 +206,4 @@ Instead, we read from the _right_, accounting for the number of trusted proxies.
 
 ## License
 
-[MIT](LICENSE) © [Volodymyr Palamar](https://github.com/gornostay25)
+[MIT](LICENSE) © [0nepeop1e](https://github.com/eslym)

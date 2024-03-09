@@ -5,11 +5,8 @@ import { fileURLToPath } from "bun";
 import path from "path";
 import sirv from "./sirv";
 import { existsSync } from "fs";
-import installPolyfills from "./polyfills";
 
 const __dirname = path.dirname(fileURLToPath(new URL(import.meta.url)));
-
-installPolyfills();
 
 /** @type {import('@sveltejs/kit').Server} */
 const server = new Server(manifest);
@@ -52,6 +49,11 @@ export default function (assets) {
     return handle(0);
   }
 
+  /**
+   * @param {Request} request 
+   * @param {import('bun').Server} server 
+   * @returns 
+   */
   function defaultAcceptWebsocket(request, server) {
     return server.upgrade(request);
   }
@@ -65,7 +67,7 @@ export default function (assets) {
             req.headers.get("connection")?.toLowerCase().includes("upgrade") &&
             req.headers.get("upgrade")?.toLowerCase() === "websocket"
           ) {
-            await (handleWebsocket.upgrade ?? defaultAcceptWebsocket)(req, srv);
+            if(!await (handleWebsocket.upgrade ?? defaultAcceptWebsocket)(req, srv)){};
             return;
           }
           return handler(req, srv);
@@ -117,13 +119,14 @@ function ssr(request, _, bunServer) {
   }
 
   const url = new URL(request.url);
+  let req = request;
 
   if (origin) {
     const new_url = new URL(origin);
     new_url.pathname = url.pathname;
     new_url.search = url.search;
     new_url.hash = url.hash;
-    request = clone_req(new_url, request);
+    req = clone_req(new_url, request);
   } else if (
     (host_header && url.host !== request.headers.get(host_header)) ||
     (protocol_header && url.protocol !== request.headers.get(protocol_header) + ":")
@@ -134,7 +137,7 @@ function ssr(request, _, bunServer) {
     if (protocol_header) {
       url.protocol = request.headers.get(protocol_header) + ":";
     }
-    request = clone_req(url, request);
+    req = clone_req(url, request);
   }
 
   if (address_header && !request.headers.has(address_header)) {
@@ -145,7 +148,7 @@ function ssr(request, _, bunServer) {
     );
   }
 
-  return server.respond(request, {
+  return server.respond(req, {
     getClientAddress() {
       if (address_header) {
         const value = /** @type {string} */ (request.headers.get(address_header)) || "";
@@ -172,8 +175,14 @@ function ssr(request, _, bunServer) {
       return clientIp ?? "127.0.0.1";
     },
     platform: {
-      isBun() {
+      get isBun() {
         return true;
+      },
+      get bunServer() {
+        return bunServer;
+      },
+      get originalRequest() {
+        return request;
       },
     },
   });
