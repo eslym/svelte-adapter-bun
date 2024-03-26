@@ -50,9 +50,9 @@ export default function (assets) {
   }
 
   /**
-   * @param {Request} request 
-   * @param {import('bun').Server} server 
-   * @returns 
+   * @param {Request} request
+   * @param {import('bun').Server} server
+   * @returns
    */
   function defaultAcceptWebsocket(request, server) {
     return server.upgrade(request);
@@ -67,8 +67,10 @@ export default function (assets) {
             req.headers.get("connection")?.toLowerCase().includes("upgrade") &&
             req.headers.get("upgrade")?.toLowerCase() === "websocket"
           ) {
-            if(!await (handleWebsocket.upgrade ?? defaultAcceptWebsocket)(req, srv)){};
-            return;
+            const upgrade = (handleWebsocket.upgrade ?? defaultAcceptWebsocket)(req, srv);
+            if (upgrade instanceof Promise ? await upgrade : upgrade) {
+              return;
+            }
           }
           return handler(req, srv);
         },
