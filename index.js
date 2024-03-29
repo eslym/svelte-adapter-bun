@@ -32,7 +32,7 @@ export default function (opts = {}) {
     assets = true,
   } = opts;
   return {
-    name: "svelte-adapter-bun",
+    name: "@eslym/svelte-adapter-bun",
     async adapt(builder) {
       const tmp = builder.getBuildDirectory("adapter-bun");
 

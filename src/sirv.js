@@ -116,6 +116,10 @@ const ENCODING = {
 function toHeaders(name, stats, isEtag) {
   let enc = ENCODING[name.slice(-3)];
 
+  if (enc) {
+    name = name.slice(0, -3);
+  }
+
   let ctype = Bun.file(name).type; //getExt(name.slice(0, enc && -3)) || "";
   if (ctype === "text/html") ctype += ";charset=utf-8";
 
@@ -125,7 +129,12 @@ function toHeaders(name, stats, isEtag) {
     "Last-Modified": stats.mtime.toUTCString(),
   });
 
-  if (enc) headers.set("Content-Encoding", enc);
+  if (enc) {
+    headers.set("Content-Encoding", enc);
+    const dummy = new Response(Bun.file(name));
+    if (dummy.headers.has("content-deposition"))
+      headers.set("content-deposition", dummy.headers.get("content-deposition"));
+  }
 
   if (isEtag) headers.set("ETag", `W/"${stats.size}-${stats.mtime.getTime()}"`);
 
@@ -234,8 +243,8 @@ export default function (dir, opts = {}) {
     data = {
       ...data,
       // clone a new headers to prevent the cached one getting modified
-      headers: new Headers(data.headers)
-    }
+      headers: new Headers(data.headers),
+    };
 
     if (gzips || brots) {
       data.headers.append("Vary", "Accept-Encoding");
