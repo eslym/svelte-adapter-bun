@@ -21,11 +21,7 @@ interface BuildOptions {
    * @default false
    */
   development?: boolean;
-  /**
-   * If enabled use `PROTOCOL_HEADER` `HOST_HEADER` like origin.
-   * @default false
-   */
-  dynamic_origin?: boolean;
+
   /**
    * The default value of XFF_DEPTH if environment is not set.
    * @default 1
@@ -37,6 +33,11 @@ interface BuildOptions {
    * @default true
    */
   assets?: boolean;
+
+  /**
+   * Transpile server side code with bun transpiler for optimization for bun.
+   */
+  transpileBun?: boolean;
 }
 type BuildOptionsMap = keyof BuildOptions;
 

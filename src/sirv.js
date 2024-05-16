@@ -121,7 +121,7 @@ function toHeaders(name, stats, isEtag) {
   }
 
   let ctype = Bun.file(name).type; //getExt(name.slice(0, enc && -3)) || "";
-  if (ctype === "text/html") ctype += ";charset=utf-8";
+  //if (ctype === "text/html") ctype += ";charset=utf-8";
 
   let headers = new Headers({
     "Content-Length": stats.size,

@@ -30,6 +30,7 @@ export default function (opts = {}) {
     dynamic_origin = false,
     xff_depth = 1,
     assets = true,
+    transpileBun = false,
   } = opts;
   return {
     name: "@eslym/svelte-adapter-bun",
@@ -105,6 +106,16 @@ export default function (opts = {}) {
           BUILD_OPTIONS: JSON.stringify({ development, dynamic_origin, xff_depth, assets }),
         },
       });
+
+      if (transpileBun) {
+        const files = await glob("./server/**/*.js", { cwd: out, absolute: true });
+        const transpiler = new Bun.Transpiler({ loader: "js" });
+        for (const file of files) {
+          const src = await Bun.file(file).text();
+          if (src.startsWith("// @bun")) continue;
+          await Bun.write(file, "// @bun\n" + transpiler.transformSync(src));
+        }
+      }
 
       let package_data = {
         name: "bun-sveltekit-app",

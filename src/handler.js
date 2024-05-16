@@ -174,7 +174,10 @@ function ssr(request, _, bunServer) {
 
         return value;
       }
-      return clientIp ?? "127.0.0.1";
+      if (!clientIp) {
+        throw new Error("Unable to determine client IP.");
+      }
+      return clientIp;
     },
     platform: {
       get isBun() {
